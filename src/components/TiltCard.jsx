@@ -12,9 +12,9 @@ export default function TiltCard({ project }) {
     const rect = el.getBoundingClientRect()
     const px = (e.clientX - rect.left) / rect.width
     const py = (e.clientY - rect.top) / rect.height
-    const rotateY = (px - 0.5) * 16
-    const rotateX = (0.5 - py) * 16
-    setTransform(`perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(8px)`)
+    const rotateY = (px - 0.5) * 12
+    const rotateX = (0.5 - py) * 12
+    setTransform(`perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(6px)`)
     setGlow({ x: px * 100, y: py * 100 })
   }
 
@@ -24,10 +24,7 @@ export default function TiltCard({ project }) {
   }
 
   return (
-    <motion.a
-      href={project.link}
-      target={project.link?.startsWith('http') ? '_blank' : undefined}
-      rel="noreferrer"
+    <motion.article
       ref={ref}
       className="card"
       onMouseMove={handleMove}
@@ -55,8 +52,15 @@ export default function TiltCard({ project }) {
             </span>
           ))}
         </div>
-        <span className="card__cta">View project →</span>
+        <div className="card__actions">
+          <a className="card__btn card__btn--demo" href={project.demo} target="_blank" rel="noreferrer">
+            Live demo →
+          </a>
+          <a className="card__btn card__btn--download" href={project.download} download>
+            Download .zip
+          </a>
+        </div>
       </div>
-    </motion.a>
+    </motion.article>
   )
 }

@@ -18,56 +18,51 @@ export const stats = [
   { value: '∞', label: 'Cups of coffee' },
 ]
 
+// Base URL so demo/download links work both locally and on GitHub Pages.
+const BASE = import.meta.env.BASE_URL
+
+// All projects are real, self-contained apps that live in public/projects.
+// `demo` opens the running app; `download` is a zip generated at build time.
 export const projects = [
   {
-    title: 'Nebula Analytics',
+    title: 'Focus Timer',
     blurb:
-      'Real-time product analytics platform processing millions of events per day with sub-second dashboards.',
-    tags: ['React', 'Node.js', 'ClickHouse', 'WebSockets'],
+      'A Pomodoro timer with focus/break modes, an animated progress dial, and persistent session counting.',
+    tags: ['HTML', 'CSS', 'JavaScript', 'SVG'],
     accent: '#7c5cff',
-    link: '#',
+    demo: `${BASE}projects/focus-timer/index.html`,
+    download: `${BASE}downloads/focus-timer.zip`,
   },
   {
-    title: 'Aether AI Assistant',
+    title: 'Markdown Previewer',
     blurb:
-      'An LLM-powered assistant with tool use, RAG over private docs, and a streaming chat UI.',
-    tags: ['Next.js', 'Python', 'LangChain', 'pgvector'],
+      'A live Markdown editor with a dependency-free renderer for headings, lists, code, tables, and links.',
+    tags: ['HTML', 'CSS', 'JavaScript', 'Regex'],
     accent: '#21d4fd',
-    link: '#',
+    demo: `${BASE}projects/markdown-previewer/index.html`,
+    download: `${BASE}downloads/markdown-previewer.zip`,
   },
   {
-    title: 'Orbit Commerce',
+    title: 'Expense Tracker',
     blurb:
-      'Headless e-commerce storefront with a 98 Lighthouse score and one-click global checkout.',
-    tags: ['Remix', 'Stripe', 'Tailwind', 'Edge'],
-    accent: '#ff6ad5',
-    link: '#',
-  },
-  {
-    title: 'Pulse DevOps',
-    blurb:
-      'Self-serve CI/CD platform that cut deploy times by 70% with preview environments per PR.',
-    tags: ['Go', 'Kubernetes', 'Terraform', 'gRPC'],
+      'Track income and spending with a running balance, totals, and transactions saved in localStorage.',
+    tags: ['HTML', 'CSS', 'JavaScript', 'localStorage'],
     accent: '#42e695',
-    link: '#',
+    demo: `${BASE}projects/expense-tracker/index.html`,
+    download: `${BASE}downloads/expense-tracker.zip`,
   },
   {
-    title: 'Lumen Design System',
+    title: 'Memory Match Game',
     blurb:
-      'A themeable, accessible component library powering 12 internal apps with 200+ components.',
-    tags: ['React', 'Storybook', 'Radix', 'a11y'],
-    accent: '#ffb347',
-    link: '#',
-  },
-  {
-    title: 'Voyage Maps',
-    blurb:
-      'Interactive 3D map experience for travel planning with smooth WebGL route animations.',
-    tags: ['Three.js', 'Mapbox', 'TypeScript', 'WebGL'],
-    accent: '#5d9bff',
-    link: '#',
+      'A 4x4 card-matching game with 3D flip animations, move counting, and a shuffled board each round.',
+    tags: ['HTML', 'CSS', 'JavaScript', 'Game'],
+    accent: '#ff6ad5',
+    demo: `${BASE}projects/memory-game/index.html`,
+    download: `${BASE}downloads/memory-game.zip`,
   },
 ]
+
+export const downloadAll = `${BASE}downloads/all-projects.zip`
 
 export const skills = [
   { group: 'Frontend', items: ['React', 'Next.js', 'TypeScript', 'Three.js', 'Tailwind CSS'] },

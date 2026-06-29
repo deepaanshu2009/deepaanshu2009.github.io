@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Memory Match Game</title>
+<style>
+  :root { --accent: #ff6ad5; --bg: #0a0a12; --panel: #14141f; --text: #ecedf5; --muted: #9aa0b5; --border: #262636; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center;
+    font-family: system-ui, -apple-system, sans-serif; color: var(--text);
+    background: radial-gradient(60% 50% at 50% 0%, #2a0f24, var(--bg)); padding: 1.5rem; }
+  .app { width: min(440px, 100%); text-align: center; }
+  h1 { margin: 0 0 0.25rem; }
+  .sub { color: var(--muted); margin: 0 0 1rem; }
+  .hud { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: 1rem; color: var(--muted); }
+  .hud strong { color: var(--text); }
+  .board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; }
+  .card { aspect-ratio: 1; border-radius: 12px; cursor: pointer; position: relative;
+    transform-style: preserve-3d; transition: transform 0.4s; }
+  .card.flipped, .card.matched { transform: rotateY(180deg); }
+  .face { position: absolute; inset: 0; display: grid; place-items: center; font-size: 2rem;
+    border-radius: 12px; backface-visibility: hidden; }
+  .back { background: var(--panel); border: 1px solid var(--border); }
+  .back::after { content: '?'; color: var(--muted); font-size: 1.5rem; }
+  .front { background: linear-gradient(135deg, var(--accent), #7c5cff); transform: rotateY(180deg); }
+  .card.matched .front { opacity: 0.5; }
+  button { margin-top: 1.25rem; background: var(--accent); color: #2a0f24; border: none;
+    padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 1rem; }
+  .win { margin-top: 1rem; color: var(--accent); font-weight: 600; min-height: 1.2em; }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Memory Match</h1>
+  <p class="sub">Flip cards and find all the matching pairs.</p>
+  <div class="hud">
+    <span>Moves: <strong id="moves">0</strong></span>
+    <span>Matched: <strong id="matched">0</strong>/8</span>
+  </div>
+  <div class="board" id="board"></div>
+  <div class="win" id="win"></div>
+  <button id="restart">New game</button>
+</div>
+<script>
+  const EMOJIS = ['🚀', '🌙', '⚡', '🔥', '🎧', '🛰️', '🧊', '🎮'];
+  const board = document.getElementById('board');
+  const movesEl = document.getElementById('moves');
+  const matchedEl = document.getElementById('matched');
+  const winEl = document.getElementById('win');
+  let first = null, lock = false, moves = 0, matched = 0;
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  function start() {
+    board.innerHTML = ''; first = null; lock = false; moves = 0; matched = 0;
+    movesEl.textContent = 0; matchedEl.textContent = 0; winEl.textContent = '';
+    shuffle([...EMOJIS, ...EMOJIS]).forEach((emoji) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<div class="face back"></div><div class="face front">${emoji}</div>`;
+      card.dataset.emoji = emoji;
+      card.addEventListener('click', () => flip(card));
+      board.appendChild(card);
+    });
+  }
+  function flip(card) {
+    if (lock || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+    card.classList.add('flipped');
+    if (!first) { first = card; return; }
+    moves++; movesEl.textContent = moves;
+    if (first.dataset.emoji === card.dataset.emoji) {
+      first.classList.add('matched'); card.classList.add('matched');
+      first = null; matched++; matchedEl.textContent = matched;
+      if (matched === EMOJIS.length) winEl.textContent = `You won in ${moves} moves! 🎉`;
+    } else {
+      lock = true;
+      const a = first, b = card; first = null;
+      setTimeout(() => { a.classList.remove('flipped'); b.classList.remove('flipped'); lock = false; }, 800);
+    }
+  }
+  document.getElementById('restart').onclick = start;
+  start();
+</script>
+</body>
+</html>

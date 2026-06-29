@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react'
 import { motion } from 'framer-motion'
-import { profile, projects, skills, stats } from './data'
+import { downloadAll, profile, projects, skills, stats } from './data'
 import TiltCard from './components/TiltCard'
 
 const Scene3D = lazy(() => import('./components/Scene3D'))
@@ -116,12 +116,17 @@ function Projects() {
       <SectionHeading
         kicker="Selected work"
         title="Projects I'm proud of"
-        sub="A mix of products, platforms, and playful experiments — built end to end."
+        sub="Real, runnable apps — try each live demo or download the source. Free for anyone to use."
       />
       <div className="grid">
         {projects.map((p) => (
           <TiltCard key={p.title} project={p} />
         ))}
+      </div>
+      <div className="projects__download-all">
+        <a className="btn btn--primary btn--lg" href={downloadAll} download>
+          ↓ Download all projects (.zip)
+        </a>
       </div>
     </section>
   )

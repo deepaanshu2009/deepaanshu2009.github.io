@@ -6,6 +6,8 @@
   "description": "3D portfolio landing page for Deepanshu Garg, Software Developer",
   "scripts": {
     "dev": "vite",
+    "zip-projects": "node scripts/zip-projects.mjs",
+    "prebuild": "node scripts/zip-projects.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint ."

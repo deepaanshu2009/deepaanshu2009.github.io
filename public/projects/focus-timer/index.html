@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Focus Timer · Pomodoro</title>
+<style>
+  :root { --accent: #7c5cff; --bg: #0a0a12; --panel: #14141f; --text: #ecedf5; --muted: #9aa0b5; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    font-family: system-ui, -apple-system, sans-serif; color: var(--text);
+    background: radial-gradient(60% 60% at 50% 0%, #1a1140, var(--bg));
+  }
+  .app { width: min(440px, 92vw); text-align: center; padding: 2rem; }
+  h1 { font-weight: 700; letter-spacing: -0.02em; margin: 0 0 0.25rem; }
+  .sub { color: var(--muted); margin: 0 0 1.5rem; }
+  .modes { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; }
+  .modes button {
+    background: var(--panel); color: var(--muted); border: 1px solid #262636;
+    padding: 0.5rem 1rem; border-radius: 999px; cursor: pointer; font-size: 0.9rem;
+  }
+  .modes button.active { background: var(--accent); color: #06060c; border-color: var(--accent); }
+  .dial { position: relative; width: 260px; height: 260px; margin: 0 auto 1.5rem; }
+  svg { transform: rotate(-90deg); }
+  .track { stroke: #20202e; }
+  .progress { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset 0.3s linear; }
+  .time { position: absolute; inset: 0; display: grid; place-items: center;
+    font-size: 3.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .controls { display: flex; gap: 0.75rem; justify-content: center; }
+  .controls button {
+    border: none; border-radius: 12px; padding: 0.85rem 1.6rem; font-size: 1rem;
+    font-weight: 600; cursor: pointer;
+  }
+  .primary { background: var(--accent); color: #06060c; }
+  .ghost { background: var(--panel); color: var(--text); border: 1px solid #262636; }
+  .count { margin-top: 1.25rem; color: var(--muted); font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Focus Timer</h1>
+  <p class="sub">A Pomodoro timer to stay in flow.</p>
+  <div class="modes">
+    <button data-min="25" class="active">Focus</button>
+    <button data-min="5">Short break</button>
+    <button data-min="15">Long break</button>
+  </div>
+  <div class="dial">
+    <svg width="260" height="260" viewBox="0 0 260 260">
+      <circle class="track" cx="130" cy="130" r="120" fill="none" stroke-width="14" />
+      <circle class="progress" cx="130" cy="130" r="120" fill="none" stroke-width="14"
+        stroke-dasharray="753.98" stroke-dashoffset="0" />
+    </svg>
+    <div class="time" id="time">25:00</div>
+  </div>
+  <div class="controls">
+    <button class="primary" id="toggle">Start</button>
+    <button class="ghost" id="reset">Reset</button>
+  </div>
+  <p class="count">Completed focus sessions: <strong id="count">0</strong></p>
+</div>
+<script>
+  const CIRC = 2 * Math.PI * 120;
+  const timeEl = document.getElementById('time');
+  const toggleBtn = document.getElementById('toggle');
+  const resetBtn = document.getElementById('reset');
+  const progress = document.querySelector('.progress');
+  const countEl = document.getElementById('count');
+  const modeBtns = document.querySelectorAll('.modes button');
+
+  let total = 25 * 60, remaining = total, running = false, tick = null;
+  let sessions = Number(localStorage.getItem('focus-sessions') || 0);
+  countEl.textContent = sessions;
+
+  function render() {
+    const m = String(Math.floor(remaining / 60)).padStart(2, '0');
+    const s = String(remaining % 60).padStart(2, '0');
+    timeEl.textContent = `${m}:${s}`;
+    progress.style.strokeDashoffset = CIRC * (1 - remaining / total);
+    document.title = `${m}:${s} · Focus Timer`;
+  }
+  function setRunning(state) {
+    running = state;
+    toggleBtn.textContent = running ? 'Pause' : 'Start';
+    if (running) {
+      tick = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+          clearInterval(tick);
+          if (modeBtns[0].classList.contains('active')) {
+            sessions++; localStorage.setItem('focus-sessions', sessions); countEl.textContent = sessions;
+          }
+          remaining = 0; render(); setRunning(false);
+          try { new AudioContext(); } catch (e) {}
+          alert('Time is up!');
+          return;
+        }
+        render();
+      }, 1000);
+    } else {
+      clearInterval(tick);
+    }
+  }
+  toggleBtn.onclick = () => setRunning(!running);
+  resetBtn.onclick = () => { setRunning(false); remaining = total; render(); };
+  modeBtns.forEach((btn) => btn.onclick = () => {
+    modeBtns.forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    setRunning(false);
+    total = remaining = Number(btn.dataset.min) * 60;
+    render();
+  });
+  render();
+</script>
+</body>
+</html>

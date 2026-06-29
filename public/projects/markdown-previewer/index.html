@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Markdown Previewer</title>
+<style>
+  :root { --accent: #21d4fd; --bg: #0a0a12; --panel: #14141f; --text: #ecedf5; --muted: #9aa0b5; --border: #262636; }
+  * { box-sizing: border-box; }
+  body { margin: 0; height: 100vh; display: flex; flex-direction: column;
+    font-family: system-ui, -apple-system, sans-serif; color: var(--text); background: var(--bg); }
+  header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex;
+    align-items: center; justify-content: space-between; }
+  header h1 { font-size: 1.1rem; margin: 0; }
+  header span { color: var(--muted); font-size: 0.85rem; }
+  .panes { flex: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: 0; }
+  textarea { background: var(--panel); color: var(--text); border: none; resize: none;
+    padding: 1.5rem; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.95rem;
+    line-height: 1.6; outline: none; border-right: 1px solid var(--border); }
+  .preview { padding: 1.5rem 2rem; overflow: auto; }
+  .preview h1, .preview h2, .preview h3 { line-height: 1.2; }
+  .preview h1 { border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  .preview a { color: var(--accent); }
+  .preview code { background: #1d1d2b; padding: 0.15rem 0.4rem; border-radius: 6px;
+    font-family: ui-monospace, monospace; font-size: 0.9em; }
+  .preview pre { background: #1d1d2b; padding: 1rem; border-radius: 10px; overflow: auto; }
+  .preview pre code { background: none; padding: 0; }
+  .preview blockquote { border-left: 3px solid var(--accent); margin: 1rem 0; padding: 0.2rem 1rem;
+    color: var(--muted); }
+  .preview table { border-collapse: collapse; }
+  .preview th, .preview td { border: 1px solid var(--border); padding: 0.4rem 0.8rem; }
+  @media (max-width: 720px) { .panes { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+    textarea { border-right: none; border-bottom: 1px solid var(--border); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Markdown Previewer</h1>
+  <span>Type Markdown on the left, see HTML on the right.</span>
+</header>
+<div class="panes">
+  <textarea id="input" spellcheck="false"></textarea>
+  <div class="preview" id="output"></div>
+</div>
+<script>
+  // Minimal, dependency-free Markdown renderer (headings, bold/italic, code,
+  // links, lists, blockquotes, hr, tables).
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function inline(s) {
+    return s
+      .replace(/`([^`]+)`/g, (_, c) => `<code>${escapeHtml(c)}</code>`)
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+  }
+  function render(md) {
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    let html = '', i = 0;
+    while (i < lines.length) {
+      let line = lines[i];
+      if (/^```/.test(line)) {
+        let code = []; i++;
+        while (i < lines.length && !/^```/.test(lines[i])) { code.push(escapeHtml(lines[i])); i++; }
+        html += `<pre><code>${code.join('\n')}</code></pre>`; i++; continue;
+      }
+      if (/^#{1,6}\s/.test(line)) {
+        const level = line.match(/^#+/)[0].length;
+        html += `<h${level}>${inline(line.replace(/^#+\s/, ''))}</h${level}>`; i++; continue;
+      }
+      if (/^>\s?/.test(line)) {
+        let quote = [];
+        while (i < lines.length && /^>\s?/.test(lines[i])) { quote.push(inline(lines[i].replace(/^>\s?/, ''))); i++; }
+        html += `<blockquote>${quote.join('<br>')}</blockquote>`; continue;
+      }
+      if (/^(-{3,}|\*{3,})$/.test(line)) { html += '<hr>'; i++; continue; }
+      if (/^\s*[-*+]\s/.test(line)) {
+        let items = [];
+        while (i < lines.length && /^\s*[-*+]\s/.test(lines[i])) { items.push(`<li>${inline(lines[i].replace(/^\s*[-*+]\s/, ''))}</li>`); i++; }
+        html += `<ul>${items.join('')}</ul>`; continue;
+      }
+      if (/^\s*\d+\.\s/.test(line)) {
+        let items = [];
+        while (i < lines.length && /^\s*\d+\.\s/.test(lines[i])) { items.push(`<li>${inline(lines[i].replace(/^\s*\d+\.\s/, ''))}</li>`); i++; }
+        html += `<ol>${items.join('')}</ol>`; continue;
+      }
+      if (/^\|.*\|$/.test(line) && /^\|[\s:|-]+\|$/.test(lines[i + 1] || '')) {
+        const head = line.split('|').slice(1, -1).map((c) => `<th>${inline(c.trim())}</th>`).join('');
+        i += 2; let rows = '';
+        while (i < lines.length && /^\|.*\|$/.test(lines[i])) {
+          rows += '<tr>' + lines[i].split('|').slice(1, -1).map((c) => `<td>${inline(c.trim())}</td>`).join('') + '</tr>';
+          i++;
+        }
+        html += `<table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`; continue;
+      }
+      if (line.trim() === '') { i++; continue; }
+      html += `<p>${inline(line)}</p>`; i++;
+    }
+    return html;
+  }
+  const input = document.getElementById('input');
+  const output = document.getElementById('output');
+  const sample = `# Markdown Previewer
+
+A tiny, **dependency-free** Markdown editor built by *Deepanshu Garg*.
+
+## Features
+- Live preview as you type
+- Headings, **bold**, *italic*, \`inline code\`
+- Lists, links, and tables
+
+> Edit this text to see it update instantly.
+
+\`\`\`js
+function greet(name) {
+  return "Hello, " + name + "!";
+}
+\`\`\`
+
+| Tech | Use |
+| ---- | --- |
+| HTML | Structure |
+| CSS  | Styling |
+| JS   | Logic |
+
+[View more projects](https://deepaanshu2009.github.io/)`;
+  input.value = localStorage.getItem('md-draft') || sample;
+  function update() { output.innerHTML = render(input.value); localStorage.setItem('md-draft', input.value); }
+  input.addEventListener('input', update);
+  update();
+</script>
+</body>
+</html>
